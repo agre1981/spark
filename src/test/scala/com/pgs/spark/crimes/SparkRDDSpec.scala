@@ -46,6 +46,13 @@ class SparkRDDSpec extends FunSuite with SharedSparkContext {
     assert(sortedRDD.collect() === Seq(("ccc",3), ("bbb",2),("aaa",1),("aaa",2)))
   }
 
+  test("rdd transformation - sortBy desc") {
+    val rdd = sc.parallelize(Seq(("ccc",3), ("aaa",1),("bbb",2), ("aaa",2)))
+    val sortedRDD = rdd.sortBy(_._1, ascending=false)
+
+    assert(sortedRDD.collect() === Seq(("ccc",3), ("bbb",2),("aaa",1),("aaa",2)))
+  }
+
   test("rdd transformation - aggregateByKey - int") {
     val rdd = sc.parallelize(Seq(("aaa",1), ("aaa",2),("bbb",2),("ccc",3)))
     val aggregateRDD = rdd.aggregateByKey(0)(_+_, _+_)
