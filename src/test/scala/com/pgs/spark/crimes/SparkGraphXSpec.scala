@@ -168,7 +168,7 @@ class GraphXSpec extends FunSuite with SharedSparkContext {
         math.min(a, b) // Merge Message
       }
     )
-    println(sssp.vertices.collect.mkString("\n"))
+    //println(sssp.vertices.collect.mkString("\n"))
   }
 
   test("graphX - pageRank") {

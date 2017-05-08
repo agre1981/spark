@@ -103,7 +103,7 @@ class SparkStreamingSpec extends FunSuite with StreamingSuiteBase {
       val wordCounts2 = lines2.flatMap(_.split(" ")).map(w=>(w, 1)).reduceByKey(_ + _)
       val joinedCounts = wordCounts.join(wordCounts2)
 
-      joinedCounts.print()
+      //joinedCounts.print()
       joinedCounts
     }
     testOperation(input1, input2, operation , output)
@@ -158,7 +158,7 @@ class SparkStreamingSpec extends FunSuite with StreamingSuiteBase {
 
       val dataset = sc.parallelize(Seq(("aaa",8), ("bbb",9)))
       val joinedDataset = wordCounts.transform(rdd => rdd.fullOuterJoin(dataset))
-      joinedDataset.print()
+      //joinedDataset.print()
       joinedDataset
     }
 
