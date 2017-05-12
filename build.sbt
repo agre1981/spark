@@ -2,21 +2,20 @@ name := "spark-crimes"
 
 version := "1.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.10.6"
 
 resolvers += "Artima Maven Repository" at  "http://repo.artima.com/releases"
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "2.1.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.1.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-hive" % "2.1.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-streaming" % "2.1.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-mllib" % "2.1.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-graphx" % "2.1.1" exclude("org.scalatest", "scalatest_2.11")
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
+libraryDependencies += "org.apache.spark" %% "spark-streaming" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
+libraryDependencies += "org.apache.spark" %% "spark-graphx" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
 
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % "test"
-libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % "2.1.0_0.6.0" % "test"
+//libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+//libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % "test"
+libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % "1.3.1_0.3.3" % "test"
 
 libraryDependencies += "org.pegdown" % "pegdown" % "1.6.0" % "test"
 

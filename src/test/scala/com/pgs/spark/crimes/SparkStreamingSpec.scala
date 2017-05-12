@@ -263,15 +263,12 @@ class SparkStreamingSpec extends FunSuite with StreamingSuiteBase {
       Seq(("aaa", 4), ("bbb", 1), ("ccc", 1))
     )
 
-    def updateFunction(newValues: Seq[(Int)], runningCount: Option[(Int)]): Option[(Int)] = {
-      Some(runningCount.getOrElse(0) + newValues.sum)
-    }
-
     val operation = (lines: DStream[String]) => {
       val words = lines.flatMap(_.split(" "))
       val pairs = words.map(word => (word, 1))
       val wordCounts = pairs.reduceByKey(_ + _)
-      val updatedCounts = wordCounts.updateStateByKey( updateFunction )
+      val updatedCounts = wordCounts.updateStateByKey(
+        (newValues: Seq[(Int)], runningCount: Option[(Int)]) => Some(runningCount.getOrElse(0) + newValues.sum) )
       //updatedCounts.print()
       updatedCounts
     }

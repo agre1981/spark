@@ -1,43 +1,46 @@
 package com.pgs.spark.crimes
 
-import com.holdenkarau.spark.testing.SharedSparkContext
-import org.apache.spark.graphx.util.GraphGenerators
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.scalatest.FunSuite
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import org.scalatest.Matchers._
 
 /**
   * Created by ogrechanov on 4/27/2017.
   */
-class GraphXSpec extends FunSuite with SharedSparkContext {
+class SparkGraphXSpec extends FunSuite with BeforeAndAfterAll {
+
+  var sc : SparkContext=null
+
+  override def beforeAll() {
+    val sparkConf = new SparkConf().setMaster("local[4]").setAppName("Spark app")
+    sc = new SparkContext(sparkConf)
+    super.beforeAll()
+
+    users = sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
+      (5L, ("franklin", "prof")), (2L, ("istoica", "prof"))))
+
+    // Create an RDD for edges
+    relationships = sc.parallelize(Array(Edge(3L, 7L, "collab"), Edge(5L, 3L, "advisor"),
+      Edge(2L, 5L, "colleague"), Edge(5L, 7L, "pi")))
+
+    // Build the initial Graph
+    graph = Graph(users, relationships, defaultUser)
+  }
+
+  override def afterAll(): Unit = {
+    sc.stop()
+    users = null
+    relationships = null
+    graph = null
+    super.afterAll()
+  }
 
   val defaultUser = ("John Doe", "Missing")
   var users: RDD[(VertexId, (String, String))] = null
   var relationships: RDD[Edge[String]] = null
   var graph: Graph[(String, String), String] = null
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-
-    users = sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
-        (5L, ("franklin", "prof")), (2L, ("istoica", "prof"))))
-
-    // Create an RDD for edges
-    relationships = sc.parallelize(Array(Edge(3L, 7L, "collab"), Edge(5L, 3L, "advisor"),
-        Edge(2L, 5L, "colleague"), Edge(5L, 7L, "pi")))
-
-    // Build the initial Graph
-    graph = Graph(users, relationships, defaultUser)
-
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    users = null
-    relationships = null
-    graph = null
-  }
 
   test("graphX - inDegrees") {
     val inDegrees = graph.inDegrees
@@ -97,17 +100,16 @@ class GraphXSpec extends FunSuite with SharedSparkContext {
   }
 
   test("graphX - subgraph vpred") {
-    val newgraph: Graph[(String, String), String] = graph.subgraph(vpred = (id, attr) => attr._2 == "prof")
+    val subgraph: Graph[(String, String), String] = graph.subgraph(vpred = (id, attr) => attr._2 == "prof")
 
-    newgraph.vertices.collect() should contain theSameElementsAs Array(
+    subgraph.vertices.collect() should contain theSameElementsAs Array(
       (2,("istoica", "prof")), (5L, ("franklin", "prof")))
   }
 
   test("graphX - subgraph epred") {
-    val newgraph: Graph[(String, String), String] = graph.subgraph(epred =
-      (triple) => triple.attr == "advisor")
+    val subgraph: Graph[(String, String), String] = graph.subgraph(epred = (triple) => triple.attr == "advisor")
 
-    newgraph.edges.collect() should contain theSameElementsAs Array(
+    subgraph.edges.collect() should contain theSameElementsAs Array(
       Edge(5L, 3L, "advisor"))
   }
 
@@ -224,23 +226,5 @@ class GraphXSpec extends FunSuite with SharedSparkContext {
 
     //println(connectionsByUsername.mkString("\n"))
     connectionsByUsername should contain theSameElementsAs Array(("eee",5),("fff",3),("ccc",3),("ggg",3),("ddd",1),("bbb",1),("aaa",1))
-  }
-
-  test("graphX - triangleCount") {
-    val users = sc.parallelize(Seq((1L, "aaa"), (2L, "bbb"), (3L, "ccc"), (4L, "ddd"), (5L, "eee"), (6L, "fff"), (7L, "ggg")))
-
-    val followers = Array((2, 1), (4, 1), (1, 2), (6, 3), (7, 3), (7, 6), (6, 7), (3, 7))
-    val edges = sc.parallelize(followers.map(f => Edge(f._1, f._2, "follower")))
-
-    val graph = Graph(users, edges)
-
-    val triCount = graph.triangleCount().vertices
-
-    val triCountByUsername = users.join(triCount)
-      .map { case (id, (username, connections)) => (username, connections) }
-      .sortBy(_._2, false).collect()
-
-    //println(triCountByUsername.mkString("\n"))
-    triCountByUsername should contain theSameElementsAs Array(("fff",1),("ccc",1),("ggg",1),("eee",0),("ddd",0),("bbb",0),("aaa",0))
   }
 }
