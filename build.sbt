@@ -1,4 +1,4 @@
-name := "spark-crimes"
+name := "spark-exam"
 
 version := "1.0"
 

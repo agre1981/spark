@@ -85,6 +85,15 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(unionRDD.collect() === Seq(1,3,7))
   }
 
+  test("rdd transformation - distinct pair") {
+    import org.scalatest.Matchers._
+
+    val rdd1 = sc.parallelize(Seq((1,1),(1,2),(3,7),(1,1)))
+    val unionRDD = rdd1.distinct()
+
+    unionRDD.collect() should contain theSameElementsAs  Seq((1,1),(1,2),(3,7))
+  }
+
   test("rdd transformation - union") {
     val rdd1 = sc.parallelize(Seq(1,1,3,7))
     val rdd2 = sc.parallelize(Seq(1,5))
@@ -329,6 +338,22 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(count === 4)
   }
 
+  test("rdd action - sum") {
+    val rdd = sc.parallelize(Seq(1,3,7,9))
+
+    val count = rdd.sum()
+
+    assert(count === 20)
+  }
+
+  test("rdd action - mean") {
+    val rdd = sc.parallelize(Seq(1,3,7,9))
+
+    val count = rdd.mean() // avg
+
+    assert(count === 5)
+  }
+
   test("rdd action - countByValue") {
     val rdd = sc.parallelize(Seq(1,1,3,7,9))
 
@@ -459,4 +484,17 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(accum.value === 9)
   }
 
+  test("rdd - foreach - data modification in partition") {
+    val accum = sc.accumulator(0)
+    val rdd = sc.parallelize(Seq(CrimeModel(1,"desc1",false), CrimeModel(2,"desc2",false), CrimeModel(3,"desc3",false)), 2)
+
+    rdd.foreach(m => {
+      m.description = "updated"
+      //println("in RDD: " + m.description)
+    })
+
+    //rdd.foreach(println)
+    // modified data does not affect other partitions and driver !!!
+    assert(rdd.collect() === Seq(CrimeModel(1,"desc1",false), CrimeModel(2,"desc2",false), CrimeModel(3,"desc3",false)))
+  }
 }
