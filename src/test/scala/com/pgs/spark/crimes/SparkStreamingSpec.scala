@@ -1,6 +1,7 @@
 package com.pgs.spark.crimes
 
 import com.holdenkarau.spark.testing.StreamingSuiteBase
+import org.apache.spark.streaming.{Duration, Seconds}
 import org.apache.spark.streaming.dstream.DStream
 import org.scalatest.FunSuite
 
@@ -71,6 +72,78 @@ class SparkStreamingSpec extends FunSuite with StreamingSuiteBase {
       val words = lines.flatMap(_.split(" "))
       val pairs = words.map(word => (word, 1))
       val wordCounts = pairs.reduceByKey(_ + _)
+      wordCounts
+    }
+
+    testOperation(input, operation , output)
+  }
+
+  test("word count - reduceByKeyAndWindow") {
+
+    val input = Seq(
+      Seq("aaa aaa", "aaa"),
+      Seq("bbb", "ccc"),
+      Seq("aaa")
+    )
+
+    val output = Seq(
+      Seq(("aaa", 3)),
+      Seq(("aaa", 3), ("bbb", 1), ("ccc", 1)),
+      Seq(("bbb", 1), ("ccc", 1), ("aaa", 1))
+    )
+
+    val operation = (lines: DStream[String]) => {
+      val words = lines.flatMap(_.split(" "))
+      val pairs = words.map(word => (word, 1))
+      val wordCounts = pairs.reduceByKeyAndWindow( (x:Int,y:Int) => x+y, batchDuration*2, batchDuration)
+      wordCounts
+    }
+
+    testOperation(input, operation , output)
+  }
+
+  ignore("word count - reduceByKeyAndWindow double batch duration") {
+
+    val input = Seq(
+      Seq("aaa aaa", "aaa"),
+      Seq("bbb", "ccc"),
+      Seq("aaa")
+    )
+
+    val output = Seq(
+      Seq(("aaa", 3)),
+      Seq(("aaa", 3), ("bbb", 1), ("ccc", 1)),
+      Seq(("bbb", 1), ("ccc", 1), ("aaa", 1))
+    )
+
+    val operation = (lines: DStream[String]) => {
+      val words = lines.flatMap(_.split(" "))
+      val pairs = words.map(word => (word, 1))
+      val wordCounts = pairs.reduceByKeyAndWindow( (x:Int,y:Int) => x+y, batchDuration*2, batchDuration)
+      wordCounts
+    }
+
+    testOperation(input, operation , output)
+  }
+
+  test("word count - window.reduceByKey") {
+
+    val input = Seq(
+      Seq("aaa aaa", "aaa"),
+      Seq("bbb", "ccc"),
+      Seq("aaa")
+    )
+
+    val output = Seq(
+      Seq(("aaa", 3)),
+      Seq(("aaa", 3), ("bbb", 1), ("ccc", 1)),
+      Seq(("bbb", 1), ("ccc", 1), ("aaa", 1))
+    )
+
+    val operation = (lines: DStream[String]) => {
+      val words = lines.flatMap(_.split(" "))
+      val pairs = words.map(word => (word, 1))
+      val wordCounts = pairs.window(batchDuration*2, batchDuration).reduceByKey( (x:Int,y:Int) => x+y)
       wordCounts
     }
 
@@ -269,6 +342,35 @@ class SparkStreamingSpec extends FunSuite with StreamingSuiteBase {
       val wordCounts = pairs.reduceByKey(_ + _)
       val updatedCounts = wordCounts.updateStateByKey(
         (newValues: Seq[(Int)], runningCount: Option[(Int)]) => Some(runningCount.getOrElse(0) + newValues.sum) )
+      //updatedCounts.print()
+      updatedCounts
+    }
+
+    testOperation(input, operation , output)
+  }
+
+  test("word count - foreachRDD") {
+
+    val input = Seq(
+      Seq("aaa aaa", "aaa"),
+      Seq("bbb", "ccc"),
+      Seq("aaa")
+    )
+
+    val output = Seq(
+      Seq(("aaa", 3)),
+      Seq(("aaa", 3), ("bbb", 1), ("ccc", 1)),
+      Seq(("aaa", 4), ("bbb", 1), ("ccc", 1))
+    )
+
+    val operation = (lines: DStream[String]) => {
+      val words = lines.flatMap(_.split(" "))
+      val pairs = words.map(word => (word, 1))
+      val wordCounts = pairs.reduceByKey(_ + _)
+      val updatedCounts = wordCounts.updateStateByKey(
+        (newValues: Seq[(Int)], runningCount: Option[(Int)]) => Some(runningCount.getOrElse(0) + newValues.sum) )
+
+      wordCounts.foreachRDD((rdd,time) => rdd.foreach(pair => println(s"Time: $time: $pair")))
       //updatedCounts.print()
       updatedCounts
     }

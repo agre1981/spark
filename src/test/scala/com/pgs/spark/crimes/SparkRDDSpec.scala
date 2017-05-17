@@ -102,6 +102,14 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(unionRDD.collect() === Seq(1,1,3,7,1,5))
   }
 
+  test("rdd transformation - union pair") {
+    val rdd1 = sc.parallelize(Seq((1,1),(2,2)))
+    val rdd2 = sc.parallelize(Seq((1,1)))
+    val unionRDD = rdd1.union(rdd2)
+
+    assert(unionRDD.collect() === Seq((1,1),(2,2),(1,1)))
+  }
+
   test("rdd transformation - intersection") {
     val rdd1 = sc.parallelize(Seq(1,1,3,7))
     val rdd2 = sc.parallelize(Seq(1,5))
@@ -185,7 +193,7 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
 
   test("rdd pair transformation - aggregateByKey - Set") {
     val rdd = sc.parallelize(Seq(("aaa",1), ("aaa",2),("bbb",2),("ccc",3)))
-    val aggregateRDD = rdd.aggregateByKey(new HashSet[Int])(_ + _, _ ++ _)
+    val aggregateRDD = rdd.aggregateByKey(HashSet.empty[Int])(_ + _, _ ++ _)
 
     assert(aggregateRDD.collect() === Array(("aaa",Set(1,2)), ("bbb",Set(2)),("ccc",Set(3))))
   }
@@ -322,10 +330,26 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(topElements === Array(9,7) )
   }
 
+  test("rdd action - top custom ordering") {
+    val vals = Array(9, 3, 7, 1)
+    val rdd = sc.parallelize(vals)
+    val topElements = rdd.top(2)(Ordering[Int].on(x => -x))
+
+    assert(topElements === Array(1,3) )
+  }
+
+  test("rdd action - top pair") {
+    val vals = Array((1,1), (2,1), (3,3), (2,2))
+    val rdd = sc.parallelize(vals)
+    val topElements = rdd.top(3)
+
+    assert(topElements === Array((3,3),(2,2),(2,1)) )
+  }
+
   test("rdd action - takeOrdered") {
     val rdd = sc.parallelize(Array(9, 3, 7, 1))
 
-    val sortedArray = rdd.takeOrdered(3)( Ordering[Int].on(x=>x) )
+    val sortedArray = rdd.takeOrdered(3)( Ordering[Int].on( x => x) )
 
     assert(sortedArray === Array(1,3,7))
   }
@@ -449,7 +473,7 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
 
   test("rdd - mapPartitions") {
     val rdd = sc.parallelize(Seq(1,3,5))
-    val addedRDD = rdd.mapPartitions( list=> list.map(_+1) )
+    val addedRDD = rdd.mapPartitions( list => list.map(_+1) )
 
     assert(addedRDD.collect() === (Array(2,4,6)))
   }
@@ -485,7 +509,6 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
   }
 
   test("rdd - foreach - data modification in partition") {
-    val accum = sc.accumulator(0)
     val rdd = sc.parallelize(Seq(CrimeModel(1,"desc1",false), CrimeModel(2,"desc2",false), CrimeModel(3,"desc3",false)), 2)
 
     rdd.foreach(m => {
