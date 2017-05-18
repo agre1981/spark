@@ -26,7 +26,7 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
     super.afterAll()
   }
 
-  test("dataFrame - sql") {
+  test("dataFrame - sql select") {
     val employees = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3",1000))
     val employeesDF = sqlContext.createDataFrame(employees)
     employeesDF.registerTempTable("employees")
@@ -34,6 +34,16 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
     val filteredDF = sqlContext.sql("SELECT name FROM employees WHERE salary<1000")
 
     assert(filteredDF.collect() === Array(Row("User1"), Row("User2")))
+  }
+
+  test("dataFrame - sql select all") {
+    val employees = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3",1000))
+    val employeesDF = sqlContext.createDataFrame(employees)
+    employeesDF.registerTempTable("employees")
+
+    val filteredDF = sqlContext.sql("SELECT * FROM employees WHERE salary<1000")
+
+    assert(filteredDF.collect() === Array(Row("User1", 100), Row("User2", 500)))
   }
 
   test("dataFrame - filter") {
@@ -57,6 +67,32 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
     assert(employees === Array(Row("User3",1000), Row("User2", 500), Row("User1", 100)))
   }
 
+  test("dataFrame - join") {
+    val sql = sqlContext
+    import sql.implicits._
+
+    val dataFrame1 = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3", 1000)).toDF("name", "salary")
+    dataFrame1.printSchema()
+    val dataFrame2 = Seq(Employee("User1", 111), Employee("User2", 222), Employee("User3", 333)).toDF("name", "extid")
+    dataFrame2.printSchema()
+    val employees = dataFrame1.join(dataFrame2, dataFrame1.col("name") === dataFrame2.col("name"))
+
+    assert(employees === Array(Row("User3",1000), Row("User2", 500), Row("User1", 100)))
+  }
+
+  test("dataFrame - join not duplicated columns") {
+    val sql = sqlContext
+    import sql.implicits._
+
+    val dataFrame1 = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3", 1000)).toDF("name", "salary")
+    dataFrame1.printSchema()
+    val dataFrame2 = Seq(Employee("User1", 111), Employee("User2", 222), Employee("User3", 333)).toDF("name", "extid")
+    dataFrame2.printSchema()
+    val employees = dataFrame1.join(dataFrame2, $"name")
+
+    assert(employees === Array(Row("User3",1000), Row("User2", 500), Row("User1", 100)))
+  }
+
   test("dataFrame - select") {
     val sql = sqlContext
     import sql.implicits._
@@ -65,6 +101,17 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
     val employees = dataFrame.select($"name").collect()
 
     assert(employees === Array(Row("User1"), Row("User2"), Row("User3")))
+  }
+
+  test("dataFrame - groupBy") {
+    val sql = sqlContext
+    import sql.implicits._
+
+    val dataFrame = Seq(Employee("User1", 500), Employee("User2", 500), Employee("User3",1000)).toDF()
+
+    val employees = dataFrame.groupBy($"salary").agg($"salary", count("name") as "cnt").select($"salary", $"cnt").collect()
+
+    assert(employees === Array(Row(500, 2), Row(1000, 1)))
   }
 
   test("dataFrame - agg count") {

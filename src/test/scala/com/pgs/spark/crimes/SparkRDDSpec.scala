@@ -4,6 +4,7 @@ import com.pgs.spark.crimes.model.CrimeModel
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
+import scala.collection.Map
 import scala.collection.immutable.HashSet
 
 /**
@@ -80,18 +81,18 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
 
   test("rdd transformation - distinct") {
     val rdd1 = sc.parallelize(Seq(1,1,3,7))
-    val unionRDD = rdd1.distinct()
+    val distinctRDD = rdd1.distinct()
 
-    assert(unionRDD.collect() === Seq(1,3,7))
+    assert(distinctRDD.collect() === Seq(1,3,7))
   }
 
   test("rdd transformation - distinct pair") {
     import org.scalatest.Matchers._
 
     val rdd1 = sc.parallelize(Seq((1,1),(1,2),(3,7),(1,1)))
-    val unionRDD = rdd1.distinct()
+    val distinctRDD = rdd1.distinct()
 
-    unionRDD.collect() should contain theSameElementsAs  Seq((1,1),(1,2),(3,7))
+    distinctRDD.collect() should contain theSameElementsAs  Seq((1,1),(1,2),(3,7))
   }
 
   test("rdd transformation - union") {
@@ -112,7 +113,7 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
 
   test("rdd transformation - intersection") {
     val rdd1 = sc.parallelize(Seq(1,1,3,7))
-    val rdd2 = sc.parallelize(Seq(1,5))
+    val rdd2 = sc.parallelize(Seq(1,1,5))
     val unionRDD = rdd1.intersection(rdd2)
 
     assert(unionRDD.collect() === Seq(1))
@@ -381,7 +382,7 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
   test("rdd action - countByValue") {
     val rdd = sc.parallelize(Seq(1,1,3,7,9))
 
-    val countRDD = rdd.countByValue()
+    val countRDD: Map[Int, Long] = rdd.countByValue()
 
     assert(countRDD === Map(1->2, 3->1, 7->1, 9->1))
   }
@@ -471,14 +472,14 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(accum.value === 9)
   }
 
-  test("rdd - mapPartitions") {
+  test("rdd transformation - mapPartitions") {
     val rdd = sc.parallelize(Seq(1,3,5))
     val addedRDD = rdd.mapPartitions( list => list.map(_+1) )
 
     assert(addedRDD.collect() === (Array(2,4,6)))
   }
 
-  test("rdd - mapPartitions - fastAvg") {
+  test("rdd transformation - mapPartitions - fastAvg") {
     val rdd = sc.parallelize(Seq(1,3,5))
     val sumAndCountRDD = rdd.mapPartitions[(Int,Int)]( list => {
       val arr = Array(0, 0)
@@ -492,14 +493,14 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(avg === 3)
   }
 
-  test("rdd - mapPartitionsWithIndex") {
+  test("rdd transformation - mapPartitionsWithIndex") {
     val rdd = sc.parallelize(Seq(1,3,5))
     val addedRDD = rdd.mapPartitionsWithIndex( (index, list)=> list.map(_+1))
 
     assert(addedRDD.collect() === (Array(2,4,6)))
   }
 
-  test("rdd - foreachPartition") {
+  test("rdd action - foreachPartition") {
     val accum = sc.accumulator(0)
     val rdd = sc.parallelize(Seq(1,3,5))
 
@@ -508,7 +509,7 @@ class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
     assert(accum.value === 9)
   }
 
-  test("rdd - foreach - data modification in partition") {
+  test("rdd action - foreach - data modification in partition") {
     val rdd = sc.parallelize(Seq(CrimeModel(1,"desc1",false), CrimeModel(2,"desc2",false), CrimeModel(3,"desc3",false)), 2)
 
     rdd.foreach(m => {

@@ -69,6 +69,11 @@ class SparkGraphXSpec extends FunSuite with BeforeAndAfterAll {
     assert(postdocs.count() === 1)
   }
 
+  test("graphX - vertices top order by id ") {
+    val rxins = graph.vertices.top(2) { Ordering.by((entry: (VertexId, (String, String))) => entry._1).reverse }
+    assert(rxins === Array((2L, ("istoica", "prof")), (3,("rxin","student"))))
+  }
+
   test("graphX - edges find ") {
     val aboveEdges = graph.edges.filter(e => e.srcId > e.dstId)
     assert(aboveEdges.count() === 1)

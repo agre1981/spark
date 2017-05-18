@@ -54,6 +54,29 @@ class SparkStreamingSpec extends FunSuite with StreamingSuiteBase {
     testOperation(input, operation , output)
   }
 
+  test("word count - transform rdd") {
+
+    val input = Seq(
+      Seq("aaa aaa", "aaa"),
+      Seq("bbb", "ccc"),
+      Seq("aaa")
+    )
+
+    val output = Seq(
+      Seq(("aaa", 1), ("aaa", 1), ("aaa", 1)),
+      Seq(("bbb", 1), ("ccc", 1)),
+      Seq(("aaa", 1))
+    )
+
+    val operation = (lines: DStream[String]) => {
+      val words = lines.flatMap(_.split(" "))
+      val pairs = words.transform(rdd => rdd.map(word => (word, 1)))
+      pairs
+    }
+
+    testOperation(input, operation , output)
+  }
+
   test("word count - reduceByKey") {
 
     val input = Seq(
