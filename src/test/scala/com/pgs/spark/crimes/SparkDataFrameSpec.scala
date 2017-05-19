@@ -70,6 +70,7 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
   test("dataFrame - join") {
     val sql = sqlContext
     import sql.implicits._
+    import org.scalatest.Matchers._
 
     val dataFrame1 = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3", 1000)).toDF("name", "salary")
     dataFrame1.printSchema()
@@ -77,20 +78,22 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
     dataFrame2.printSchema()
     val employees = dataFrame1.join(dataFrame2, dataFrame1.col("name") === dataFrame2.col("name"))
 
-    assert(employees === Array(Row("User3",1000), Row("User2", 500), Row("User1", 100)))
+    employees.collect() should contain theSameElementsAs Array( Row("User1", 100,"User1",111), Row("User2", 500,"User2",222), Row("User3",1000,"User3",333))
   }
 
   test("dataFrame - join not duplicated columns") {
     val sql = sqlContext
     import sql.implicits._
+    import org.scalatest.Matchers._
 
     val dataFrame1 = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3", 1000)).toDF("name", "salary")
     dataFrame1.printSchema()
     val dataFrame2 = Seq(Employee("User1", 111), Employee("User2", 222), Employee("User3", 333)).toDF("name", "extid")
     dataFrame2.printSchema()
-    val employees = dataFrame1.join(dataFrame2, $"name")
+    val employees = dataFrame1.join(dataFrame2, dataFrame1.col("name") === dataFrame2.col("name"))
+      .select(dataFrame1.col("name"), dataFrame1.col("salary"), dataFrame2.col("extid"))
 
-    assert(employees === Array(Row("User3",1000), Row("User2", 500), Row("User1", 100)))
+    employees.collect() should contain theSameElementsAs Array( Row("User1", 100,111), Row("User2", 500,222), Row("User3",1000,333))
   }
 
   test("dataFrame - select") {
