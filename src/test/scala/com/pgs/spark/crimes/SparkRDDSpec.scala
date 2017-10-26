@@ -1,5 +1,6 @@
 package com.pgs.spark.crimes
 
+import com.holdenkarau.spark.testing.SharedSparkContext
 import com.pgs.spark.crimes.model.CrimeModel
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
@@ -11,21 +12,7 @@ import scala.collection.immutable.HashSet
 /**
   * Created by ogrechanov on 4/26/2017.
   */
-class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
-
-  var sparkSession: SparkSession = null
-  var sc : SparkContext =null
-
-  override def beforeAll() {
-    sparkSession = SparkSession.builder.appName("Spark app").master("local[4]").getOrCreate()
-    sc = sparkSession.sparkContext
-    super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    sparkSession.stop()
-    super.afterAll()
-  }
+class SparkRDDSpec extends FunSuite with SharedSparkContext {
 
   test("rdd creation - from array") {
     val rdd = sc.parallelize(Seq(1,3,7,9))

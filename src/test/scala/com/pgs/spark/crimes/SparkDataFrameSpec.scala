@@ -1,5 +1,6 @@
 package com.pgs.spark.crimes
 
+import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, Row, SQLContext, SparkSession}
@@ -10,22 +11,7 @@ case class Employee(name: String, salary: Int)
 /**
   * Created by ogrechanov on 5/5/2017.
   */
-class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
-  var sparkSession: SparkSession = null
-  var sc : SparkContext =null
-  var sqlContext: SQLContext = null
-
-  override def beforeAll() {
-    sparkSession = SparkSession.builder.appName("Spark app").master("local[4]").getOrCreate()
-    sc = sparkSession.sparkContext
-    sqlContext = sparkSession.sqlContext
-    super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    sparkSession.stop()
-    super.afterAll()
-  }
+class SparkDataFrameSpec extends FunSuite with DataFrameSuiteBase {
 
   test("dataFrame - sql select") {
     val employees = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3",1000))

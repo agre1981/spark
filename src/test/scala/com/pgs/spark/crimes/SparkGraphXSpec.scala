@@ -1,5 +1,6 @@
 package com.pgs.spark.crimes
 
+import com.holdenkarau.spark.testing.SharedSparkContext
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
@@ -10,14 +11,9 @@ import org.scalatest.Matchers._
 /**
   * Created by ogrechanov on 4/27/2017.
   */
-class SparkGraphXSpec extends FunSuite with BeforeAndAfterAll {
-
-  var sparkSession: SparkSession = null
-  var sc : SparkContext=null
+class SparkGraphXSpec extends FunSuite with SharedSparkContext {
 
   override def beforeAll() {
-    sparkSession = SparkSession.builder.appName("Spark app").master("local[4]").getOrCreate()
-    sc = sparkSession.sparkContext
     super.beforeAll()
 
     users = sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
@@ -32,11 +28,10 @@ class SparkGraphXSpec extends FunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll(): Unit = {
-    sparkSession.stop()
+    super.afterAll()
     users = null
     relationships = null
     graph = null
-    super.afterAll()
   }
 
   val defaultUser = ("John Doe", "Missing")
