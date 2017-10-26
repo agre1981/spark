@@ -3,6 +3,7 @@ package com.pgs.spark.crimes
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import org.scalatest.Matchers._
 
@@ -11,11 +12,12 @@ import org.scalatest.Matchers._
   */
 class SparkGraphXSpec extends FunSuite with BeforeAndAfterAll {
 
+  var sparkSession: SparkSession = null
   var sc : SparkContext=null
 
   override def beforeAll() {
-    val sparkConf = new SparkConf().setMaster("local[4]").setAppName("Spark app")
-    sc = new SparkContext(sparkConf)
+    sparkSession = SparkSession.builder.appName("Spark app").master("local[4]").getOrCreate()
+    sc = sparkSession.sparkContext
     super.beforeAll()
 
     users = sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
@@ -30,7 +32,7 @@ class SparkGraphXSpec extends FunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll(): Unit = {
-    sc.stop()
+    sparkSession.stop()
     users = null
     relationships = null
     graph = null
@@ -194,25 +196,25 @@ class SparkGraphXSpec extends FunSuite with BeforeAndAfterAll {
 
     //println(ranksByUsername.mkString("\n"))
     ranksByUsername(0)._1 shouldEqual "aaa"
-    ranksByUsername(0)._2 should be (1.45 +- 0.01)
+    ranksByUsername(0)._2 should be (1.66 +- 0.01)
 
     ranksByUsername(1)._1 shouldEqual "bbb"
-    ranksByUsername(1)._2 should be (1.39 +- 0.01)
+    ranksByUsername(1)._2 should be (1.58 +- 0.01)
 
     ranksByUsername(2)._1 shouldEqual "ggg"
-    ranksByUsername(2)._2 should be (1.29 +- 0.01)
+    ranksByUsername(2)._2 should be (1.47 +- 0.01)
 
     ranksByUsername(3)._1 shouldEqual "ccc"
-    ranksByUsername(3)._2 should be (0.99 +- 0.01)
+    ranksByUsername(3)._2 should be (1.13 +- 0.01)
 
     ranksByUsername(4)._1 shouldEqual "fff"
-    ranksByUsername(4)._2 should be (0.70 +- 0.01)
+    ranksByUsername(4)._2 should be (0.79 +- 0.01)
 
     ranksByUsername(5)._1 shouldEqual "ddd"
-    ranksByUsername(5)._2 should be (0.15 +- 0.01)
+    ranksByUsername(5)._2 should be (0.17 +- 0.01)
 
     ranksByUsername(6)._1 shouldEqual "eee"
-    ranksByUsername(6)._2 should be (0.15 +- 0.01)
+    ranksByUsername(6)._2 should be (0.17 +- 0.01)
   }
 
   test("graphX - connectedComponents") {

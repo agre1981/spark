@@ -2,22 +2,24 @@ name := "spark-exam"
 
 version := "1.0"
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.11.11"
 
 resolvers += "Artima Maven Repository" at  "http://repo.artima.com/releases"
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-streaming" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-mllib" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
-libraryDependencies += "org.apache.spark" %% "spark-graphx" % "1.3.1" exclude("org.scalatest", "scalatest_2.11")
+libraryDependencies += "org.apache.spark" %% "spark-core_2.11" % "2.2.0"
+libraryDependencies += "org.apache.spark" %% "spark-sql_2.11" % "2.2.0"
+libraryDependencies += "org.apache.spark" %% "spark-streaming_2.11" % "2.2.0"
+libraryDependencies += "org.apache.spark" %% "spark-mllib_2.11" % "2.2.0"
+libraryDependencies += "org.apache.spark" %% "spark-graphx_2.11" % "2.2.0"
 
-//libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test"
-//libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % "test"
-libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % "1.3.1_0.3.3" % "test"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
+libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % "test"
+libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.7.4" % "test"
 
 libraryDependencies += "org.pegdown" % "pegdown" % "1.6.0" % "test"
+
+fork in Test := true
+javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
 parallelExecution in Test := false
 

@@ -2,7 +2,7 @@ package com.pgs.spark.crimes
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Column, Row, SQLContext}
+import org.apache.spark.sql.{Column, Row, SQLContext, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 case class Employee(name: String, salary: Int)
@@ -11,25 +11,26 @@ case class Employee(name: String, salary: Int)
   * Created by ogrechanov on 5/5/2017.
   */
 class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
+  var sparkSession: SparkSession = null
   var sc : SparkContext =null
   var sqlContext: SQLContext = null
 
   override def beforeAll() {
-    val sparkConf = new SparkConf().setMaster("local[4]").setAppName("Spark app")
-    sc = new SparkContext(sparkConf)
-    sqlContext = new SQLContext(sc)
+    sparkSession = SparkSession.builder.appName("Spark app").master("local[4]").getOrCreate()
+    sc = sparkSession.sparkContext
+    sqlContext = sparkSession.sqlContext
     super.beforeAll()
   }
 
   override def afterAll(): Unit = {
-    sc.stop()
+    sparkSession.stop()
     super.afterAll()
   }
 
   test("dataFrame - sql select") {
     val employees = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3",1000))
     val employeesDF = sqlContext.createDataFrame(employees)
-    employeesDF.registerTempTable("employees")
+    employeesDF.createOrReplaceTempView("employees")
 
     val filteredDF = sqlContext.sql("SELECT name FROM employees WHERE salary<1000")
 
@@ -39,7 +40,7 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
   test("dataFrame - sql select all") {
     val employees = Seq(Employee("User1", 100), Employee("User2", 500), Employee("User3",1000))
     val employeesDF = sqlContext.createDataFrame(employees)
-    employeesDF.registerTempTable("employees")
+    employeesDF.createOrReplaceTempView("employees")
 
     val filteredDF = sqlContext.sql("SELECT * FROM employees WHERE salary<1000")
 
@@ -124,7 +125,7 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
     val dataFrame = Seq(Employee("User1", 500), Employee("User2", 500), Employee("User3",1000)).toDF()
     val employees = dataFrame.groupBy($"salary").agg(count("name") as "cnt").collect()
 
-    assert(employees === Array(Row(2), Row(1)))
+    assert(employees === Array(Row(500, 2), Row(1000, 1)))
   }
 
   test("dataFrame - agg sum1") {
@@ -171,4 +172,6 @@ class SparkDataFrameSpec extends FunSuite with BeforeAndAfterAll {
       """{"name":"User2","salary":500}""",
       """{"name":"User3","salary":1000}"""))
   }
+
+
 }

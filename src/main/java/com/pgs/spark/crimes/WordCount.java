@@ -7,6 +7,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
 
 import java.util.Arrays;
@@ -20,12 +21,13 @@ public class WordCount {
 
     public static void main(String[] args) throws Exception {
 
-        JavaSparkContext spark = new JavaSparkContext("local[4]", "JavaWordCount");
+        SparkSession sparkSession = SparkSession.builder().appName("Spark app").master("local[4]").getOrCreate();
         try {
+            JavaSparkContext spark = new JavaSparkContext(sparkSession.sparkContext());
 
             JavaRDD<String> linesRDD = spark.parallelize(Arrays.asList(new String[]{"aaa bbb", "aaa ccc", "aaa bbb"}));
 
-            JavaRDD<String> wordsRDD = linesRDD.flatMap((FlatMapFunction<String, String>) s -> Arrays.asList(s.split(" ")));
+            JavaRDD<String> wordsRDD = linesRDD.flatMap((FlatMapFunction<String, String>) s -> Arrays.asList(s.split(" ")).iterator());
 
             JavaPairRDD<String, Integer> ones = wordsRDD.mapToPair(
                     (PairFunction<String, String, Integer>) s -> new Tuple2<>(s, 1));
@@ -39,7 +41,7 @@ public class WordCount {
             }
         }
         finally {
-            spark.stop();
+            sparkSession.stop();
         }
     }
 

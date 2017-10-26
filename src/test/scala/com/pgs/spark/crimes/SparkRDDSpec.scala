@@ -1,6 +1,7 @@
 package com.pgs.spark.crimes
 
 import com.pgs.spark.crimes.model.CrimeModel
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
@@ -12,16 +13,17 @@ import scala.collection.immutable.HashSet
   */
 class SparkRDDSpec extends FunSuite with BeforeAndAfterAll {
 
-  var sc : SparkContext=null
+  var sparkSession: SparkSession = null
+  var sc : SparkContext =null
 
   override def beforeAll() {
-    val sparkConf = new SparkConf().setMaster("local[4]").setAppName("Spark app")
-    sc = new SparkContext(sparkConf)
+    sparkSession = SparkSession.builder.appName("Spark app").master("local[4]").getOrCreate()
+    sc = sparkSession.sparkContext
     super.beforeAll()
   }
 
   override def afterAll(): Unit = {
-    sc.stop()
+    sparkSession.stop()
     super.afterAll()
   }
 

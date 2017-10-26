@@ -1,7 +1,6 @@
 package com.pgs.spark.crimes
 
 import com.holdenkarau.spark.testing.StreamingSuiteBase
-import org.apache.spark.streaming.{Duration, Seconds}
 import org.apache.spark.streaming.dstream.DStream
 import org.scalatest.FunSuite
 
@@ -125,7 +124,7 @@ class SparkStreamingSpec extends FunSuite with StreamingSuiteBase {
     testOperation(input, operation , output)
   }
 
-  ignore("word count - reduceByKeyAndWindow double batch duration") {
+  test("word count - reduceByKeyAndWindow double batch duration") {
 
     val input = Seq(
       Seq("aaa aaa", "aaa"),
